@@ -1,0 +1,8 @@
+{
+  "name": "HealthGuard AI Assistant",
+  "description": "A professional healthcare chatbot interface featuring real-time chat, voice interaction, and integrated medical scheduling services.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}

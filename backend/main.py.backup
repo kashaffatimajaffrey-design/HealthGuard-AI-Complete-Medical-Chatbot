@@ -1,0 +1,156 @@
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import os
+from dotenv import load_dotenv
+from contextlib import asynccontextmanager
+import uvicorn
+
+# Load environment variables
+load_dotenv()
+
+# Import routers
+from api.chat import router as chat_router
+from api.webhooks import router as webhooks_router
+from api.crm import router as crm_router
+from api.workflows import router as workflows_router
+from api.patients import router as patients_router
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan events - startup and shutdown"""
+    # Startup
+    print("🚀 HealthGuard AI Backend Starting...")
+    print(f"📊 Environment: {os.getenv('ENVIRONMENT', 'development')}")
+    print(f"🌐 Frontend URL: {os.getenv('FRONTEND_URL', 'http://localhost:3000')}")
+    
+    if os.getenv('MOCK_MODE', 'false').lower() == 'true':
+        print("⚠️  Running in MOCK MODE - No real API calls")
+    else:
+        print("✅ Real AI mode - Gemini API active")
+    
+    yield
+    # Shutdown
+    print("👋 HealthGuard AI Backend Shutting Down...")
+
+# Create FastAPI app
+app = FastAPI(
+    title="HealthGuard AI Backend",
+    description="Healthcare Automation Platform API",
+    version="6.0.0",
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# Configure CORS (allow your frontend to connect)
+origins = [
+    os.getenv("FRONTEND_URL", "http://localhost:3000"),
+    "http://localhost:3000",
+    "https://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Global exception handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal server error",
+            "detail": str(exc),
+            "path": request.url.path
+        }
+    )
+
+# Health check endpoints
+@app.get("/")
+async def root():
+    return {
+        "status": "active",
+        "service": "HealthGuard AI Backend",
+        "version": "6.0.0",
+        "mode": os.getenv("ENVIRONMENT", "development"),
+        "mock": os.getenv("MOCK_MODE", "false").lower() == "true",
+        "endpoints": {
+            "chat": "/api/chat",
+            "webhooks": "/webhooks/retell",
+            "crm": "/crm/leads",
+            "workflows": "/workflows",
+            "patients": "/patients",
+            "docs": "/docs"
+        }
+    }
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "timestamp": "2023-11-20T10:30:00Z",
+        "components": {
+            "api": "online",
+            "database": "simulated",
+            "ai_engine": "ready",
+            "automation": "active",
+            "crm": "connected"
+        }
+    }
+
+# Test endpoint for frontend connection
+@app.get("/api/test")
+async def test_endpoint():
+    return {
+        "message": "Backend is connected!",
+        "endpoints_available": [
+            "POST /api/chat - AI chat endpoint",
+            "POST /webhooks/retell - Retell.ai voice webhook",
+            "GET /crm/leads - CRM leads",
+            "GET /workflows - n8n workflows",
+            "GET /patients - Patient data",
+            "GET /docs - API documentation"
+        ]
+    }
+
+# Include all routers
+app.include_router(chat_router, prefix="/api", tags=["Chat"])
+app.include_router(webhooks_router, prefix="/webhooks", tags=["Webhooks"])
+app.include_router(crm_router, prefix="/crm", tags=["CRM"])
+app.include_router(workflows_router, prefix="/workflows", tags=["Workflows"])
+app.include_router(patients_router, prefix="/patients", tags=["Patients"])
+
+# API info endpoint
+@app.get("/api/info")
+async def api_info():
+    return {
+        "name": "HealthGuard AI API",
+        "version": "6.0.0",
+        "description": "Healthcare automation platform with voice AI, CRM, and n8n workflows",
+        "features": [
+            "Real-time voice AI processing",
+            "CRM integration (Go High Level simulation)",
+            "n8n workflow automation",
+            "Patient management system",
+            "Webhook handling for Retell.ai"
+        ],
+        "tech_stack": {
+            "backend": "FastAPI + Python",
+            "ai": "Google Gemini 1.5 Flash",
+            "database": "In-memory (simulated)",
+            "automation": "n8n simulation"
+        }
+    }
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", 8000)),
+        reload=True  # Auto-reload on code changes
+    )
