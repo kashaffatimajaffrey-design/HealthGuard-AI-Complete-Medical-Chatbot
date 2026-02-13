@@ -1,16 +1,4 @@
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
-=======
-# HealthGuard-AI-Complete-Medical-Chatbot
 # HealthGuard-AI-Complete-Medical-Chatbot
 [A medical chatbot powered by Google Gemini 2.5 Flash with NO token limits! Provides complete, empathetic healthcare responses including mental health support, symptom assessment, and appointment scheduling.](https://img.shields.io/badge/Python-3.9%252B-blue
 https://img.shields.io/badge/FastAPI-0.104.1-green
@@ -293,6 +281,17 @@ Commit your changes (git commit -m 'Add some AmazingFeature')
 Push to the branch (git push origin feature/AmazingFeature)
 
 Open a Pull Request
+
+## Run Locally
+
+**Prerequisites:**  Node.js
+
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
 
 # Contact
 Kashaf Fatima - kash.fatima7@gmail.com
