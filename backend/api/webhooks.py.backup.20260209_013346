@@ -1,0 +1,60 @@
+import sys
+import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
+backend_dir = os.path.dirname(current_dir)
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+from fastapi import APIRouter, HTTPException, Request, WebSocket
+import requests
+import json
+import os
+
+router = APIRouter()
+
+# Real Retell.ai API (would need actual API key)
+RETELL_API_KEY = os.getenv("RETELL_API_KEY")
+
+@router.post("/retell/real")
+async def real_retell_webhook(request: Request):
+    """REAL Retell.ai webhook processing"""
+    if not RETELL_API_KEY:
+        return {
+            "message": "Set RETELL_API_KEY in .env for real voice AI",
+            "mock": True,
+            "actions": ["Would process real voice with Retell.ai"]
+        }
+    
+    try:
+        data = await request.json()
+        
+        # Forward to real Retell API
+        headers = {
+            "Authorization": f"Bearer {RETELL_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        # Example - actual Retell endpoint
+        response = requests.post(
+            "https://api.retellai.com/v1/process",
+            headers=headers,
+            json=data
+        )
+        
+        return response.json()
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.websocket("/voice/real")
+async def real_voice_websocket(websocket: WebSocket):
+    """REAL voice WebSocket connection"""
+    await websocket.accept()
+    
+    # This would connect to real voice service
+    # For now, simulate
+    await websocket.send_json({
+        "type": "connected",
+        "message": "Real voice service would connect here",
+        "service": "Would be Retell.ai or similar"
+    })
