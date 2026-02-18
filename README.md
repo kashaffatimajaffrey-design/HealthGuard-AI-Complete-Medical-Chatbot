@@ -1,11 +1,6 @@
 
 # HealthGuard-AI-Complete-Medical-Chatbot
-[A medical chatbot powered by Google Gemini 2.5 Flash with NO token limits! Provides complete, empathetic healthcare responses including mental health support, symptom assessment, and appointment scheduling.](https://img.shields.io/badge/Python-3.9%252B-blue
-https://img.shields.io/badge/FastAPI-0.104.1-green
-https://img.shields.io/badge/Google%2520Gemini-2.5%2520Flash-orange
-https://img.shields.io/badge/License-MIT-yellow
-
-A production-ready healthcare chatbot powered by Google Gemini 2.5 Flash with COMPLETE, UNTRUNCATED responses.
+A medical chatbot powered by Google Gemini 2.5 Flash with NO token limits! Provides complete, empathetic healthcare responses including mental health support, symptom assessment, and appointment scheduling.
 Never get cut off mid-sentence again!
 
 # 📋 Table of Contents
