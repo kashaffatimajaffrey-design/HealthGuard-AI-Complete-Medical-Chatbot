@@ -1,12 +1,15 @@
 
-# HealthGuard-AI-Complete-Medical-Chatbot
-A medical chatbot powered by Google Gemini 2.5 Flash with NO token limits! Provides complete, empathetic healthcare responses including mental health support, symptom assessment, and appointment scheduling.
-Never get cut off mid-sentence again!
+# HealthGuard AI
+
+A multi-channel health assistant built on FastAPI and Google Gemini 2.5 Flash.
+One backend serves a REST chat endpoint, Retell voice webhooks, and a WebSocket
+relay, returning structured actions — symptom assessment, appointment scheduling,
+medication information, and mental health support.
 
 # 📋 Table of Contents
 Demo
 
-The Problem I Solved
+What This Solves
 
 Features
 
@@ -35,27 +38,32 @@ AI: Provides immediate grounding techniques, breathing exercises, and emergency 
 
 User: "I have a fever and feel lightheaded"  
 AI: Gives symptom assessment, self-care tips, and when to seek medical help
-🔥 The Problem I Solved
-The Token Limit Nightmare
+## What This Solves
 
-Most Gemini API implementations suffer from truncated responses due to token limits. Users would ask for help and get cut off mid-sentence - which is terrible for healthcare where complete information is critical.
+A health assistant has to work across channels without losing the thread. Someone
+starts by typing, calls in later, and expects the system to know who they are and
+what they already said. HealthGuard exposes all three surfaces from one FastAPI
+service — the REST chat endpoint, Retell webhooks, and a WebSocket relay — so the
+shared conversation layer has a single place to live instead of three codebases to
+reconcile.
 
-Before (Typical Implementation):
+Every reply comes back as a structured action rather than a blob of text: a
+conversation ID, quick-replies, an optional widget, and confidence in the metadata.
+The client renders state instead of parsing prose, which is what makes the same
+backend usable from a chat window and from a phone call.
 
-text
-User: "I'm having a panic attack"
-AI: "I'm so sorry you're going through this. Let me help you with some grounding techniques. First, try to..."
-[RESPONSE CUT OFF]
-After (HealthGuard AI - NO TOKEN LIMITS):
-
-text
-User: "I'm having a panic attack"  
-AI: Provides COMPLETE response with grounding techniques, breathing exercises, emergency guidelines, and follow-up support - all in one message!
-The fix was simple but crucial: Remove the maxOutputTokens parameter and let Gemini decide the response length!
+**Where the boundary currently is.** Crisis handling is prompt-level, not
+deterministic. Emergency guidance and escalation instructions live in the system
+prompt, and urgent keywords detected in a reply surface an emergency quick-reply —
+but the model is still in the path. For a production health deployment that is the
+wrong design: crisis terms should be matched on the *input* and routed straight to
+emergency guidance with no generated response at all, because a generated response
+is the wrong artifact when someone is in danger. That pre-model check is the next
+thing to build, and it is named here rather than papered over.
 
 # ✨ Features
 🏥 Medical Conversations
-Complete, empathetic responses (NEVER cut off!)
+Complete, empathetic responses (no output-token cap)
 
 Evidence-based medical guidance
 
@@ -139,7 +147,7 @@ pip (Python package manager)
 
 Step 1: Clone the Repository
 bash
-git clone https://github.com/Kashaffatimaaa/HealthGuard-AI-Complete-Medical-Chatbot.git
+git clone https://github.com/kashaffatimajaffrey-design/HealthGuard-AI.git
 cd healthguard-ai
 Step 2: Create Virtual Environment
 bash
@@ -154,7 +162,12 @@ Step 3: Install Dependencies
 bash
 pip install -r requirements.txt
 Step 4: Set Up Environment Variables
-Create a .env file in the root directory:
+Copy the template and fill in your own keys. Never commit `.env`:
+
+bash
+cp .env.example .env
+
+The template looks like this:
 
 env
 # Google Gemini API
@@ -189,6 +202,8 @@ PORT	Server port	❌ No	8000
 HOST	Server host	❌ No	0.0.0.0
 RETELL_API_KEY	Retell.ai API key	❌ No	-
 RETELL_AGENT_ID	Retell.ai agent ID	❌ No	-
+BACKEND_PORT	Backend port (alt)	❌ No	8000
+NGROK_URL	Public tunnel URL for local webhook testing	❌ No	-
 Usage
 Testing the API
 Root Endpoint
@@ -247,7 +262,7 @@ healthguard-ai/
 ├── backend/
 │   ├── __init__.py
 │   ├── main.py                 # Main FastAPI application
-│   ├── gemini_client_final.py  # Gemini API client (NO TOKEN LIMITS!)
+│   ├── gemini_client_final.py  # Gemini API client
 │   ├── api/
 │   │   ├── __init__.py
 │   │   ├── chat.py             # Chat endpoint router
@@ -259,7 +274,8 @@ healthguard-ai/
 │   └── models/
 │       ├── __init__.py
 │       └── schemas.py          # Pydantic models
-├── .env                         # Environment variables (NOT in git)
+├── .env.example                 # Environment variable template (committed)
+├── .env                         # Your real keys (git-ignored, NEVER commit)
 ├── .gitignore                   # Git ignore file
 ├── requirements.txt             # Python dependencies
 ├── README.md                    # This file
@@ -284,14 +300,14 @@ Open a Pull Request
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. Copy `.env.example` to `.env` and set `GEMINI_API_KEY` to your Gemini API key
 3. Run the app:
    `npm run dev`
 
 # Contact
 Kashaf Fatima - kash.fatima7@gmail.com
 
-Project Link: https://github.com/Kashaffatimaaa/HealthGuard-AI-Complete-Medical-Chatbot
+Project Link: https://github.com/kashaffatimajaffrey-design/HealthGuard-AI
 
 # Acknowledgments
 Google Gemini API
@@ -299,4 +315,3 @@ Google Gemini API
 FastAPI
 
 Retell.ai for voice AI inspiration
->>>>>>> f0f620674c9fa820725954947d6631cf45280f7f

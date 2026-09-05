@@ -1,4 +1,4 @@
-﻿import os
+import os
 from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
@@ -23,7 +23,7 @@ class RetellWebhook(BaseModel):
 
 # Configuration - Load from .env
 RETELL_API_KEY = os.getenv("RETELL_API_KEY", "")
-RETELL_AGENT_ID = os.getenv("RETELL_AGENT_ID", "***REMOVED***")
+RETELL_AGENT_ID = os.getenv("RETELL_AGENT_ID", "")
 
 print(f"🎯 Retell Configuration Loaded:")
 if RETELL_API_KEY:
