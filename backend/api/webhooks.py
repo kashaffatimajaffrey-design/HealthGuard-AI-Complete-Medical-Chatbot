@@ -7,6 +7,8 @@ import re
 from datetime import datetime
 from dotenv import load_dotenv
 
+from api.crisis import check_crisis, build_crisis_response
+
 load_dotenv()
 
 router = APIRouter()
@@ -73,6 +75,24 @@ def process_for_free_account(transcript: str, call_id: str, metadata: Dict[str, 
     processed_transcript = process_template_variables(transcript, metadata or {})
     print(f"📝 Processed transcript: {processed_transcript}")
     
+    # Same deterministic crisis check the chat endpoint runs, on the same
+    # module, so voice and chat cannot drift apart on the one path where
+    # drifting matters. This sits above every other rule below by design.
+    crisis = check_crisis(processed_transcript)
+    if crisis:
+        print(f"🚨 CRISIS ROUTE (voice): category={crisis.category} terms={crisis.matched_terms}")
+        payload = build_crisis_response(crisis)
+        return {
+            "response": payload["content"],
+            "call_id": call_id,
+            "intent": "crisis",
+            "crisis_category": crisis.category,
+            "model_bypassed": True,
+            "escalate": True,
+            "transcript_original": transcript,
+            "transcript_processed": processed_transcript,
+        }
+
     transcript_lower = processed_transcript.lower()
     response = ""
     actions = []

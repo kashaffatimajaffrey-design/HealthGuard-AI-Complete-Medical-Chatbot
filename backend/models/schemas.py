@@ -42,7 +42,11 @@ class ChatResponse(BaseModel):
     response: str
     conversation_id: str
     quick_replies: Optional[List[str]] = None
-    widget: Optional[str] = None  # calendar, intake-form, etc.
+    widget: Optional[str] = None  # calendar, intake-form, emergency, etc.
+    # chat.py has always passed metadata here, but it was never declared, so
+    # pydantic silently dropped it and clients never saw confidence, timing, or
+    # the crisis flags. Declared now so the documented response shape is real.
+    metadata: Optional[Dict[str, Any]] = None
 
 class WebhookRequest(BaseModel):
     call_id: Optional[str] = None

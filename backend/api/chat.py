@@ -10,6 +10,7 @@ if str(current_dir) not in sys.path:
 from fastapi import APIRouter, HTTPException
 from models.schemas import ChatRequest, ChatResponse
 from gemini_client_final import gemini_client
+from api.crisis import check_crisis, build_crisis_response
 import time
 from datetime import datetime
 
@@ -17,7 +18,7 @@ router = APIRouter()
 
 @router.post("/chat")
 async def chat_endpoint(request: ChatRequest):
-    """Main chat endpoint with REAL Gemini AI - NO TOKEN LIMITS"""
+    """Main chat endpoint. Crisis input is routed deterministically before the model."""
     try:
         print(f"\n{'='*60}")
         print(f"💬 Chat request received at {datetime.now().isoformat()}")
@@ -26,8 +27,33 @@ async def chat_endpoint(request: ChatRequest):
         print(f"   Mode: {'REAL Gemini' if not gemini_client.mock_mode else 'MOCK'}")
         
         start_time = time.time()
-        
-        # Get REAL AI response (no token limits)
+
+        # Deterministic crisis check BEFORE the model. If this matches, the
+        # model is never called: a generated response is the wrong artifact
+        # when someone is in danger. See api/crisis.py for the reasoning.
+        crisis = check_crisis(request.message)
+        if crisis:
+            print(f"🚨 CRISIS ROUTE: category={crisis.category} terms={crisis.matched_terms}")
+            print(f"   Model bypassed - returning reviewed emergency guidance")
+            payload = build_crisis_response(crisis)
+            return ChatResponse(
+                response=payload["content"],
+                conversation_id=request.conversation_id or f"conv_{int(time.time())}",
+                quick_replies=payload["quick_replies"],
+                widget=payload["widget"],
+                metadata={
+                    "ai_model": None,
+                    "response_time": f"{time.time() - start_time:.2f}s",
+                    "is_mock": False,
+                    "confidence": 1.0,
+                    "timestamp": datetime.now().isoformat(),
+                    "response_length": len(payload["content"]),
+                    "crisis_category": crisis.category,
+                    "model_bypassed": True,
+                },
+            )
+
+        # Get REAL AI response
         ai_response = await gemini_client.generate_response(
             message=request.message,
             context={

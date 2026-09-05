@@ -52,18 +52,29 @@ conversation ID, quick-replies, an optional widget, and confidence in the metada
 The client renders state instead of parsing prose, which is what makes the same
 backend usable from a chat window and from a phone call.
 
-**Where the boundary currently is.** Crisis handling is prompt-level, not
-deterministic. Emergency guidance and escalation instructions live in the system
-prompt, and urgent keywords detected in a reply surface an emergency quick-reply —
-but the model is still in the path. For a production health deployment that is the
-wrong design: crisis terms should be matched on the *input* and routed straight to
-emergency guidance with no generated response at all, because a generated response
-is the wrong artifact when someone is in danger. That pre-model check is the next
-thing to build, and it is named here rather than papered over.
+The harder problem is knowing when the agent shouldn't answer at all. Crisis input
+is matched deterministically **before** the model is called — self-harm, overdose,
+violence, and medical emergencies route straight to fixed, reviewed emergency
+guidance, and the model is never invoked. A generated response is the wrong artifact
+when someone is in danger: model output is non-deterministic and can't be signed off
+by a clinician ahead of time, but the strings in `backend/api/crisis.py` can be. Chat
+and voice call the same module, so the two channels can't drift apart on the one path
+where drifting matters.
+
+Matching is deliberately biased toward false positives — there is no negation
+handling, so "I don't want to kill myself" still routes to the crisis card. Showing
+that card to someone speaking figuratively is a mild annoyance; missing a real
+disclosure is not.
+
+**Where the boundary still is.** This is keyword matching, and it is a floor rather
+than a substitute for human escalation: it won't catch obfuscation, misspellings, or
+indirect disclosure. The resource numbers are US-only, so any deployment outside the
+US needs locale-aware routing before this is fit for use. Both limits are enforced by
+tests in `tests/test_crisis.py` rather than left to a reviewer to discover.
 
 # ✨ Features
 🏥 Medical Conversations
-Complete, empathetic responses (no output-token cap)
+Complete responses — no `maxOutputTokens` cap, so guidance is never truncated mid-section
 
 Evidence-based medical guidance
 
@@ -111,12 +122,14 @@ Dosage guidance
 
 Medication interactions
 
-🚨 Emergency Detection
-Automatically identifies crisis keywords
+🚨 Crisis Routing (deterministic)
+Crisis input matched before the model runs — the model is bypassed entirely
 
-Provides immediate emergency instructions
+Fixed, reviewable emergency guidance per category (self-harm, overdose, violence, medical emergency)
 
-Clear "call 911" indicators
+Shared by the chat endpoint and the voice webhook via `backend/api/crisis.py`
+
+Covered by `tests/test_crisis.py` and `tests/test_endpoints.py`
 
 🔌 Integration Ready
 Retell.ai webhook support for voice AI
@@ -190,6 +203,11 @@ bash
 cd backend
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 Your server will be running at http://localhost:8000
+
+Step 6: Run the Tests
+bash
+python3 tests/test_crisis.py      # crisis router, no dependencies needed
+python3 tests/test_endpoints.py   # both channels end-to-end, mock mode
 
 Configuration
 Environment Variables

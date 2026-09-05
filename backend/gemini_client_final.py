@@ -72,7 +72,9 @@ Format your response with clear sections using emojis for readability. Be profes
                 }],
                 "generationConfig": {
                     "temperature": 0.7,
-                    "maxOutputTokens": 800,
+                    # No maxOutputTokens on purpose. An 800-token cap truncates
+                    # exactly the responses that most need to be complete -
+                    # "when to see a doctor" sections land at the end.
                 }
             }
             
